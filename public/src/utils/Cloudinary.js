@@ -7,9 +7,10 @@ cloudinary.config(
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
     api_key: process.env.CLOUDINARY_API_KEY, 
     api_secret: process.env.CLOUDINARY_API_SECRET,
-});   
+});
 
-const uploadOnCloudinary = async (filePath) => {
+/*
+    const uploadOnCloudinary = async (filePath) => {
     try {
         if(!filePath)  return null;
 
@@ -20,13 +21,61 @@ const uploadOnCloudinary = async (filePath) => {
 
         // FILE UPLOADED SUCCESSFULLY, NOW DELETE THE LOCAL FILE
         console.log("File uploaded to Cloudinary successfully. NOW Deleting local file...",response.url);
-        return response.url;
-    }   
-      catch (error) {
-        fs.unlinkSync(filePath); // DELETE THE LOCAL FILE IN CASE OF ERROR  
-        return null ;
-      }
+        // return response.url;
+        return response;
     } 
+
+      
+    // catch (error) {
+    //     fs.unlinkSync(filePath); // DELETE THE LOCAL FILE IN CASE OF ERROR  
+    //     return null ;
+    //   }
+
+
+
+    //     if (filePath) fs.unlinkSync(filePath);
+    //     return null;
+    // } 
+     
+    catch (error) {
+    console.log(" CLOUDINARY ERROR MESSAGE:", error.message);
+    console.log(" FULL ERROR OBJECT:", error);
+
+    if (filePath) fs.unlinkSync(filePath);
+    return null;
+}
+}
+*/
+
+const uploadOnCloudinary = async (filePath) => {
+  try {
+    if (!filePath) return null;
+
+    const response = await cloudinary.uploader.upload(
+      filePath.replace(/\\/g, "/"), // 🔥 FIX
+      {
+        resource_type: "auto",
+      }
+    );
+
+    console.log("Uploaded:", response.secure_url);
+
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return response;
+
+  } catch (error) {
+    console.log("Cloudinary Error:", error.message);
+
+    if (filePath && fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    return null;
+  }
+};
 
     export { uploadOnCloudinary };
 
@@ -39,6 +88,9 @@ const uploadOnCloudinary = async (filePath) => {
 //         console.error("Error uploading to Cloudinary:", error); 
 //     });
 //     console.log("Upload result:", result);  
+
+
+
 
 
 

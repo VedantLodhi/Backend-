@@ -56,14 +56,14 @@ watchHistory : [
 }
 )
 
-userSchema.pre("save", async function (next) {
+userSchema.pre("save", async function () {
     if (!this.isModified("password")) 
     {  // IF PASSWORD IS NOT MODIFIED, THEN WE DON'T NEED TO HASH IT AGAIN
-        return next()
+        return ;
     }
-
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
+    
+    const SALT_ROUNDS = 10;
+    this.password = await bcrypt.hash(this.password, 10);
     
 })
 

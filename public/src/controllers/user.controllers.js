@@ -1,11 +1,9 @@
-import { response } from 'express';
+// import { response } from 'express';
 import {asyncHandler} from '../utils/asyncHandler.js';
-import (ApiError) from '../utils/ApiError.js';
+import { ApiError } from '../utils/ApiError.js';
 import {User} from '../models/User.model.js';
-import {uploadOnCloudinary} from '../utils/Cloudinary.js';55
+import {uploadOnCloudinary} from '../utils/Cloudinary.js';
 import {ApiResponse} from '../utils/ApiResponse.js';
-
-
 
 const registerUser = asyncHandler(async (req,res) => 
     {
@@ -33,8 +31,17 @@ const registerUser = asyncHandler(async (req,res) =>
     // CHECK FOR IMAGE UPLOAD & AVATAR CREATION 
     //  HANDLE IMAGE UPLOAD USING MULTER
     const avatarLocalPath = req.files?.avatar[0]?.path;
+    console.log("avatarLocalPath:", avatarLocalPath);
     // HANDLE COVER IMAGE UPLOAD
-    const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+    console.log("coverImageLocalPath:", coverImageLocalPath);
+
+    // let coverImageLocalPath;
+    // if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) 
+    //     {
+    //         coverImageLocalPath = req.files.coverImage[0].path;
+    //     }
+
     // CHECK IF AVATAR IMAGE IS UPLOADED  
     if(!avatarLocalPath)
     {
@@ -45,9 +52,10 @@ const registerUser = asyncHandler(async (req,res) =>
 
     // UPLOAD THE AVATAR IMAGE TO CLOUDINARY AND GET THE URL
     const avatar = await uploadOnCloudinary(avatarLocalPath);
+    console.log("CLOUDINARY RESPONSE:", avatar);
     // UPLOAD THE COVER IMAGE TO CLOUDINARY AND GET THE URL
-    const coverImage = await uploadOnCloudinary(coverImageLocalPath);
-
+     const coverImage = coverImageLocalPath? await uploadOnCloudinary(coverImageLocalPath): null;
+     
     // CHECK IF AVATAR UPLOAD WAS SUCCESSFUL
     if(!avatar)
     {
@@ -58,8 +66,9 @@ const registerUser = asyncHandler(async (req,res) =>
     const user = await User.create
     ({
         fullName,
-        avatar: avatar.url,
-        coverImage: coverImage?.url || "",
+        // avatar: avatar.url,
+        avatar: avatar.secure_url,
+        coverImage: coverImage?.secure_url || "",
         username: username.toLowerCase(),
         email,
         password
@@ -80,7 +89,7 @@ const registerUser = asyncHandler(async (req,res) =>
     // STEP-9: RETURN A RESPONSE TO THE FRONTEND
     return res.status(201).json
     (
-        new ApiResponse(200, createdUser, "User registered successfully")
+        new ApiResponse(201, createdUser, "User registered successfully")
     );
 
 })
