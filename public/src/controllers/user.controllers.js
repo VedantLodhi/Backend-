@@ -36,11 +36,6 @@ const registerUser = asyncHandler(async (req,res) =>
     const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
     console.log("coverImageLocalPath:", coverImageLocalPath);
 
-    // let coverImageLocalPath;
-    // if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) 
-    //     {
-    //         coverImageLocalPath = req.files.coverImage[0].path;
-    //     }
 
     // CHECK IF AVATAR IMAGE IS UPLOADED  
     if(!avatarLocalPath)
