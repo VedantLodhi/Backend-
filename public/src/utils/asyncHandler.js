@@ -13,18 +13,3 @@ export { asyncHandler };
 
 
 
-
-
-/*  ------> TRY-CATCH BLOCK FOR ASYNC FUNCTIONS <------  
-const asyncHandler = (fn) => (req,res,next) =>  {
-    try {
-        await fn(req,res,next)
-
-    } catch (error) {
-        res.status(error.code || 500).json({          
-            success: false,
-            message: error.message || "Internal Server Error"
-        })
-    }
-}
-    */
