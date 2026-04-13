@@ -177,6 +177,7 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, null, "User logged out successfully"));
 });
 
+// REFRESH ACCESS TOKEN
 const refreshAccessToken = asyncHandler(async (req, res) => 
     {
        const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -223,6 +224,7 @@ const refreshAccessToken = asyncHandler(async (req, res) =>
         }
     })
 
+//  CHANGE CURRENT USER PASSWORD
 const changeCurrentUserPassword = asyncHandler(async (req, res) => 
     {
     const { oldPassword, newPassword } = req.body;  
@@ -243,11 +245,13 @@ const changeCurrentUserPassword = asyncHandler(async (req, res) =>
     );  
 
     }); 
-    
+
+// GET CURRENT USER
 const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200).json(200, req.user, "Current user fetched successfully");
 }); 
 
+//  UPDATE ACCOUNT DETAILS
 const updateAccountdetails = asyncHandler(async (req, res) => 
     {
         const {fullName, email} =  req.body
@@ -271,7 +275,8 @@ const updateAccountdetails = asyncHandler(async (req, res) =>
     );
 
     })
-        
+ 
+// UPDATE USER AVATAR
 const updateUserAvatar = asyncHandler(async (req, res) => 
     {
         const avatarLocalPath = req.file?.path;
@@ -302,6 +307,7 @@ const updateUserAvatar = asyncHandler(async (req, res) =>
 
     });
 
+// UPDATE USER COVER IMAGE
 const updateUserCoverImage = asyncHandler(async (req, res) => 
     {
         const coverImageLocalPath = req.file?.path;
@@ -332,4 +338,80 @@ const updateUserCoverImage = asyncHandler(async (req, res) =>
 
     });    
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentUserPassword , getCurrentUser, updateAccountdetails, updateUserAvatar, updateUserCoverImage};
+// GET USER CHANNEL PROFILE
+const getUserChannelProfile = asyncHandler(async (req, res) => 
+    {
+      const {username} = req.params
+
+        if(!username?.trim())
+        {
+            throw new ApiError(400, "Username is missing");
+        }
+
+// AGGREGATION PIPELINE TO GET CHANNEL DETAILS ALONG WITH SUBSCRIBER COUNT AND SUBSCRIBED CHANNELS COUNT
+       const channel = await User.aggregate([
+            {
+                $match: {
+                    username: username?.toLowerCase().trim()
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "channel",
+                    as: "subscribers"
+                }
+            },
+            {
+                $lookup: {
+                    from: "subscriptions",
+                    localField: "_id",
+                    foreignField: "subscriber",
+                    as: " subscribedChannels"
+                }
+            },
+            {
+                $addFields: {
+                    subscriberCount: { $size: "$subscribers" },
+                    channelsSubscribedToCount: { $size: "$subscribedChannels" }
+                },
+                isSubscribed: {
+                    $if: 
+                    { 
+                        $in: [req.user?._id, "$subscribers.subscriber"] 
+                    },
+                    then : true,
+                    else : false    
+                }
+            },
+            {
+                $project: {
+                    fullName: 1,
+                    username: 1,
+                    subscriberCount: 1,
+                    channelsSubscribedToCount: 1,
+                    isSubscribed: 1,
+                    avatar: 1,
+                    coverImage: 1,
+                    email: 1,
+                    createdAt: 1,
+                }
+                }
+        ])
+
+//      VALIDATION 
+        if(!channel || channel.length === 0)
+        {
+            throw new ApiError(404, "Channel not found");
+        }
+
+//      RESPONSE
+        return res.status(200).json(
+            new ApiResponse(200, channel[0], "Channel profile fetched successfully")
+        );
+
+    })
+    
+
+export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentUserPassword , getCurrentUser, updateAccountdetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile};
