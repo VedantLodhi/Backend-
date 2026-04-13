@@ -161,14 +161,14 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: { refreshToken: undefined }
+            $unset: { refreshToken: 1 }
         },
         { new: true }
     );
 
     const cookieOptions = {
         httpOnly: true,
-        secure: false, // 🔥 DEV FIX
+        secure: false, //  DEV FIX
     };
 
     return res.status(200)
@@ -412,7 +412,7 @@ const getUserChannelProfile = asyncHandler(async (req, res) =>
         );
     })
 
-
+// GET USER WATCH HISTORY
 const getWatchHistory = asyncHandler(async (req, res) => 
     {
         const user = await User.aggregate([
