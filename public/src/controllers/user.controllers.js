@@ -1,7 +1,7 @@
-import fs from "fs"; // 🔥 ADD THIS
+import fs from "fs"; 
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { ApiError } from '../utils/ApiError.js';
-import { User } from '../models/User.model.js';
+import { User } from '../models/user.model.js';
 import { uploadOnCloudinary } from '../utils/Cloudinary.js';
 import { ApiResponse } from '../utils/ApiResponse.js';
 import jwt from 'jsonwebtoken';
@@ -176,6 +176,43 @@ const logoutUser = asyncHandler(async (req, res) => {
         .clearCookie("refreshToken", cookieOptions)
         .json(new ApiResponse(200, null, "User logged out successfully"));
 });
+
+//  DELETE USER ACCOUNT
+const deleteUserAccount = asyncHandler(async (req, res) => {
+    // Implementation for deleting user account
+
+    const userId = req.user?._id;
+
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized request");
+    }
+
+    //  find user first
+    const user = await User.findById(userId);
+
+    if (!user) {
+        throw new ApiError(404, "User not found");
+    }
+
+    // avatar & cover delete kar sakta hai future me
+
+    //  DELETE USER
+    await User.findByIdAndDelete(userId);
+
+    // clear cookies
+    const cookieOptions = {
+        httpOnly: true,
+        secure: false
+    };
+
+    return res.status(200)
+        .clearCookie("accessToken", cookieOptions)
+        .clearCookie("refreshToken", cookieOptions)
+        .json(
+            new ApiResponse(200, {}, "User account deleted successfully")
+        );
+});
+
 
 // REFRESH ACCESS TOKEN
 const refreshAccessToken = asyncHandler(async (req, res) => 
@@ -470,4 +507,4 @@ const getWatchHistory = asyncHandler(async (req, res) =>
     })    
     
 
-export { registerUser, loginUser, logoutUser, refreshAccessToken, changeCurrentUserPassword , getCurrentUser, updateAccountdetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory,};
+export { registerUser, loginUser, logoutUser, deleteUserAccount, refreshAccessToken, changeCurrentUserPassword , getCurrentUser, updateAccountdetails, updateUserAvatar, updateUserCoverImage, getUserChannelProfile, getWatchHistory};
